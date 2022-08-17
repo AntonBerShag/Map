@@ -5,18 +5,37 @@
 #include <chrono>
 #include <algorithm>
 #include <cstdlib>
+#include <fstream>
 using namespace std;
 
 class User {
 public:
 	int id;
 	string name;
-	bool graphic; // 0 -night, 1 - day;
+	bool dayShift; // 0 -night, 1 - day;
 	int salary;// 10 000 to 20 000
-	User(int id, string name) :id(id), name(name) {}
+	
+	User() = default;
+
+	User(int id, string name, bool dayShift, int salary)
+		:id(id),
+		name(name),
+		dayShift(dayShift),
+		salary(salary) {}
 
 	bool operator== (const User& other)const {
 		return id == other.id && name == other.name;
+	}
+
+	friend ostream& operator<<(ostream& out, const User& obj) {
+		out << obj.id << ' ' << obj.name << ' ' << obj.dayShift << 
+			' ' << obj.salary << ' ';
+		return out;
+	}
+
+	friend istream& operator>>(istream& in, User& obj) {
+		in >> obj.id >> obj.name >> obj.dayShift >> obj.salary;
+		return in;
 	}
 };
 
@@ -27,7 +46,11 @@ void task(int count) {
 	users.reserve(count);
 	auto begin = chrono::steady_clock::now();
 	for (int i = 0; i < users.capacity(); i++) {
-		users.emplace_back(i + 1, "user" + to_string(i + 1));
+		//users.emplace_back(i + 1, "user" + to_string(i + 1));
+		users.emplace_back(i + 1,
+			"user" + to_string(i + 1),
+			static_cast<bool>(::rand() % 2),
+			10000 + ::rand());
 	}
 	auto end = chrono::steady_clock::now();
 	auto elapsed_ms = chrono::duration_cast<chrono::nanoseconds>
@@ -48,7 +71,7 @@ void task(int count) {
 	auto vec_tmp = find(
 		users.begin(),
 		users.end(),
-		User{ count, "user" + to_string(count)}
+		User{ count, "user" + to_string(count), true, 11111}
 	);
 	end = chrono::steady_clock::now();
 	elapsed_ms = chrono::duration_cast<chrono::nanoseconds>
@@ -61,9 +84,22 @@ void task(int count) {
 	elapsed_ms = chrono::duration_cast<chrono::nanoseconds>
 		(end - begin);
 	std::cout << "Fined in map: " << elapsed_ms.count() << " ms\n";
+
+	ofstream out("base.txt", ios::app);
+	for (auto& user : users) {
+		//cout << User << '\n';
+		out << user << '\n';
+	}
+	out.close();
+	//---------------
+
+
+
 }
 
 int main() {
+	task(10);
+
 	/*g_Users.insert({"user", {1, "user"}});
 	User local;
 	local.id = 2;
@@ -80,9 +116,6 @@ int main() {
 
 	auto &[login, user] = *(g_Users.find("user3"));
 	user.id;*/
-
-	task(10000);
 	
-
 	return 0;
 }
